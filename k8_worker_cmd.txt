@@ -1,0 +1,2 @@
+kubeadm join 172.31.80.186:6443 --token ip7ua5.peidxmy5nzhub4s4 \
+        --discovery-token-ca-cert-hash sha256:e8c0bbd42e685261ed83849066873a086e7c00ec3ccbe63990c6173c79142afa
