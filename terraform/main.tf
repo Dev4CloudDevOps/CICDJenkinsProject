@@ -1,199 +1,183 @@
-provider "aws" {
-  region = "us-east-1"
+provider "azurerm" {
+  features {}
 }
 
-resource "aws_security_group" "boardgame_sg" {
-  name        = "boardgame-security-group"
-  description = "A security group for boardgame project"
-  vpc_id      = "vpc-07835fe3e95b328a1" # Replace with your VPC ID
+resource "azurerm_resource_group" "boardgame_rg" {
+  name     = "boardgame-rg"
+  location = "East US"
+}
 
-  # Inbound rule for SMTP (Port 25)
-  ingress {
-    from_port   = 25
-    to_port     = 25
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow SMTP from anywhere
+resource "azurerm_virtual_network" "boardgame_vnet" {
+  name                = "boardgame-vnet"
+  location            = azurerm_resource_group.boardgame_rg.location
+  resource_group_name = azurerm_resource_group.boardgame_rg.name
+  address_space       = ["10.0.0.0/16"]
+}
+
+resource "azurerm_subnet" "boardgame_subnet" {
+  name                 = "boardgame-subnet"
+  resource_group_name  = azurerm_resource_group.boardgame_rg.name
+  virtual_network_name = azurerm_virtual_network.boardgame_vnet.name
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_network_security_group" "boardgame_nsg" {
+  name                = "boardgame-nsg"
+  location            = azurerm_resource_group.boardgame_rg.location
+  resource_group_name = azurerm_resource_group.boardgame_rg.name
+
+  security_rule {
+    name                       = "Allow-SMTP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "25"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for HTTP (Port 80)
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow HTTP from anywhere
+  security_rule {
+    name                       = "Allow-HTTP"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for HTTPS (Port 443)
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow HTTPS from anywhere
+  security_rule {
+    name                       = "Allow-HTTPS"
+    priority                   = 300
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for SSH (Port 22)
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow SSH from anywhere
+  security_rule {
+    name                       = "Allow-SSH"
+    priority                   = 400
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for Custom TCP (Ports 3000–10000)
-  ingress {
-    from_port   = 3000
-    to_port     = 10000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow custom TCP from anywhere
+  security_rule {
+    name                       = "Allow-Custom-Range-1"
+    priority                   = 500
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3000-10000"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for Custom TCP (Ports 3000–10000)
-  ingress {
-    from_port   = 30000
-    to_port     = 32767
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow custom TCP from anywhere
+  security_rule {
+    name                       = "Allow-Custom-Range-2"
+    priority                   = 600
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "30000-32767"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for Custom TCP (Ports 3000–10000)
-  ingress {
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow custom TCP from anywhere
+  security_rule {
+    name                       = "Allow-Custom-6443"
+    priority                   = 700
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Inbound rule for SMTPS (Port 465)
-  ingress {
-    from_port   = 465
-    to_port     = 465
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow SMTPS from anywhere
+  security_rule {
+    name                       = "Allow-SMTPS"
+    priority                   = 800
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "465"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # Outbound rules (allow all outbound traffic by default)
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"          # All protocols
-    cidr_blocks = ["0.0.0.0/0"] # Allow all outbound traffic
+  security_rule {
+    name                       = "Allow-All-Outbound"
+    priority                   = 900
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_interface" "boardgame_nic" {
+  name                = "boardgame-nic"
+  location            = azurerm_resource_group.boardgame_rg.location
+  resource_group_name = azurerm_resource_group.boardgame_rg.name
+  subnet_id           = azurerm_subnet.boardgame_subnet.id
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.boardgame_subnet.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "boardgame_vm" {
+  count               = 5
+  name                = "boardgame-vm-${count.index + 1}"
+  resource_group_name = azurerm_resource_group.boardgame_rg.name
+  location            = azurerm_resource_group.boardgame_rg.location
+  size                = "Standard_B2ms"
+  admin_username      = "azureuser"
+  admin_password      = "P@ssw0rd1234"
+  network_interface_ids = [
+    azurerm_network_interface.boardgame_nic.id,
+  ]
+
+  os_disk {
+    name                 = "boardgame-os-disk-${count.index + 1}"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "20.04-LTS"
+    version   = "latest"
+  }
+
+  tags = {
+    environment = "Terraform"
   }
 }
 
 output "security_group_id" {
-  value = aws_security_group.boardgame_sg.id
-}
-
-
-
-resource "aws_instance" "master" {
-  ami           = "ami-084568db4383264d4" # Ubuntu 24.04 AMI
-  instance_type = "t3.medium"
-  #subnet_id     = aws_subnet.subnet_a.id
-  #security_groups             = [aws_security_group.boardgame_sg.id]
-  security_groups             = ["sg-003019f96bc56777b"]
-  associate_public_ip_address = true
-  subnet_id                   = "subnet-02aceeee6a46b30cd"
-  key_name                    = "kops-key"
-  root_block_device {
-    volume_size           = 25    # Size of the root volume in GB
-    volume_type           = "gp3" # General Purpose SSD (gp2) volume type
-    delete_on_termination = true  # Volume will be deleted when the instance is terminated
-  }
-  count = 1
-
-  tags = {
-    Name = "master"
-  }
-  # depends_on = [aws_security_group.boardgame_sg]
-}
-
-resource "aws_instance" "worker" {
-  ami           = "ami-084568db4383264d4" # Ubuntu 24.04 AMI
-  instance_type = "t3.small"
-  #subnet_id     = aws_subnet.subnet_b.id
-  #security_groups             = [aws_security_group.boardgame_sg.id]
-  security_groups             = ["sg-003019f96bc56777b"]
-  associate_public_ip_address = true
-  key_name                    = "kops-key"
-  subnet_id                   = "subnet-02aceeee6a46b30cd"
-  root_block_device {
-    volume_size           = 25    # Size of the root volume in GB
-    volume_type           = "gp3" # General Purpose SSD (gp2) volume type
-    delete_on_termination = true  # Volume will be deleted when the instance is terminated
-  }
-  count = 2
-
-  tags = {
-    Name = "worker"
-  }
-
-  # depends_on = [aws_security_group.boardgame_sg]
-}
-
-resource "aws_instance" "sonarqube" {
-  ami           = "ami-084568db4383264d4" # Ubuntu 24.04 AMI
-  instance_type = "t3.small"
-  #subnet_id     = aws_subnet.subnet_a.id
-  #security_groups             = [aws_security_group.boardgame_sg.id]
-  security_groups             = ["sg-003019f96bc56777b"]
-  associate_public_ip_address = true
-  key_name                    = "kops-key"
-  count                       = 1
-  subnet_id                   = "subnet-02aceeee6a46b30cd"
-  root_block_device {
-    volume_size           = 20    # Size of the root volume in GB
-    volume_type           = "gp3" # General Purpose SSD (gp2) volume type
-    delete_on_termination = true  # Volume will be deleted when the instance is terminated
-  }
-  tags = {
-    Name = "sonarqube"
-  }
-
-  # depends_on = [aws_security_group.boardgame_sg]
-}
-
-resource "aws_instance" "nexus" {
-  ami           = "ami-084568db4383264d4" # Ubuntu 24.04 AMI
-  instance_type = "t3.small"
-  #subnet_id     = aws_subnet.subnet_a.id
-  #security_groups             = [aws_security_group.boardgame_sg.id]
-  security_groups             = ["sg-003019f96bc56777b"]
-  associate_public_ip_address = true
-  key_name                    = "kops-key"
-  count                       = 1
-  subnet_id                   = "subnet-02aceeee6a46b30cd"
-  root_block_device {
-    volume_size           = 20    # Size of the root volume in GB
-    volume_type           = "gp3" # General Purpose SSD (gp2) volume type
-    delete_on_termination = true  # Volume will be deleted when the instance is terminated
-  }
-  tags = {
-    Name = "nexus"
-  }
-
-  # depends_on = [aws_security_group.boardgame_sg]
-}
-
-
-resource "aws_instance" "jenkins" {
-  ami           = "ami-084568db4383264d4" # Ubuntu 24.04 AMI
-  instance_type = "t2.large"
-  #subnet_id     = aws_subnet.subnet_a.id
-  #security_groups             = [aws_security_group.boardgame_sg.id]
-  security_groups             = ["sg-003019f96bc56777b"]
-  associate_public_ip_address = true
-  key_name                    = "kops-key"
-  count                       = 1
-  subnet_id                   = "subnet-02aceeee6a46b30cd"
-  root_block_device {
-    volume_size           = 30    # Size of the root volume in GB
-    volume_type           = "gp3" # General Purpose SSD (gp2) volume type
-    delete_on_termination = true  # Volume will be deleted when the instance is terminated
-  }
-  tags = {
-    Name = "jenkins"
-  }
-
-  # depends_on = [aws_security_group.boardgame_sg]
+  value = azurerm_network_security_group.boardgame_nsg.id
 }
